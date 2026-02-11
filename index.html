@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FX Dashboard</title>
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a0e17;
+    --card-bg:rgba(255,255,255,.05);
+    --card-border:rgba(255,255,255,.08);
+    --text:#e2e8f0;
+    --text-dim:#64748b;
+    --up:#22c55e;
+    --down:#ef4444;
+    --accent:#3b82f6;
+    --accent-glow:rgba(59,130,246,.25);
+  }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:2rem 1rem;
+  }
+  h1{
+    font-size:1.5rem;
+    font-weight:700;
+    letter-spacing:.05em;
+    margin-bottom:.25rem;
+    background:linear-gradient(135deg,#60a5fa,#a78bfa);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .subtitle{
+    font-size:.8rem;
+    color:var(--text-dim);
+    margin-bottom:2rem;
+  }
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:1.5rem;
+    width:100%;
+    max-width:960px;
+    margin-bottom:2rem;
+  }
+  .card{
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    border-radius:16px;
+    padding:1.75rem;
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    transition:transform .2s,box-shadow .2s;
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:3px;
+    background:linear-gradient(90deg,var(--accent),#a78bfa);
+    opacity:.6;
+  }
+  .card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 8px 32px rgba(0,0,0,.3);
+  }
+  .pair-label{
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+    margin-bottom:1rem;
+  }
+  .flag{font-size:1.6rem}
+  .pair-name{
+    font-size:1rem;
+    font-weight:600;
+    color:var(--text-dim);
+    letter-spacing:.04em;
+  }
+  .rate{
+    font-size:2.4rem;
+    font-weight:700;
+    letter-spacing:-.02em;
+    margin-bottom:.5rem;
+    font-variant-numeric:tabular-nums;
+    min-height:3rem;
+  }
+  .change{
+    display:inline-flex;
+    align-items:center;
+    gap:.3rem;
+    font-size:.85rem;
+    font-weight:600;
+    padding:.25rem .6rem;
+    border-radius:6px;
+  }
+  .change.up{color:var(--up);background:rgba(34,197,94,.1)}
+  .change.down{color:var(--down);background:rgba(239,68,68,.1)}
+  .change.neutral{color:var(--text-dim);background:rgba(100,116,139,.1)}
+
+  .controls{
+    display:flex;
+    align-items:center;
+    gap:1rem;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-bottom:1rem;
+  }
+  .btn{
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    color:var(--text);
+    padding:.5rem 1.2rem;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:.8rem;
+    font-weight:500;
+    transition:background .2s,border-color .2s;
+    backdrop-filter:blur(8px);
+  }
+  .btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.15)}
+  .btn.active{border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .status-bar{
+    display:flex;
+    align-items:center;
+    gap:.5rem;
+    font-size:.75rem;
+    color:var(--text-dim);
+  }
+  .dot{
+    width:8px;height:8px;
+    border-radius:50%;
+    background:var(--up);
+    animation:pulse 2s infinite;
+  }
+  .dot.error{background:var(--down);animation:none}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .spinner{
+    display:none;
+    width:20px;height:20px;
+    border:2px solid var(--card-border);
+    border-top-color:var(--accent);
+    border-radius:50%;
+    animation:spin .6s linear infinite;
+  }
+  .spinner.show{display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .skeleton{
+    background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 75%);
+    background-size:200% 100%;
+    animation:shimmer 1.5s infinite;
+    border-radius:6px;
+    display:inline-block;
+    width:160px;height:2.4rem;
+  }
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  .error-msg{
+    color:var(--down);
+    font-size:.8rem;
+    text-align:center;
+    margin-top:.5rem;
+    display:none;
+  }
+  .error-msg.show{display:block}
+
+  .card.crypto::before{
+    background:linear-gradient(90deg,#f7931a,#fbbf24);
+  }
+  .card.crypto .flag{
+    font-family:serif;
+    font-size:1.8rem;
+    font-weight:700;
+    color:#f7931a;
+  }
+
+  @media(max-width:640px){
+    .cards{grid-template-columns:1fr}
+    .rate{font-size:2rem}
+  }
+</style>
+</head>
+<body>
+<h1>FX DASHBOARD</h1>
+<p class="subtitle">Real-time Exchange Rates</p>
+
+<div class="cards">
+  <div class="card" id="card-usd">
+    <div class="pair-label"><span class="flag">🇺🇸</span><span class="pair-name">USD / JPY</span></div>
+    <div class="rate" id="rate-usd"><span class="skeleton"></span></div>
+    <span class="change neutral" id="change-usd">--</span>
+  </div>
+  <div class="card" id="card-eur">
+    <div class="pair-label"><span class="flag">🇪🇺</span><span class="pair-name">EUR / JPY</span></div>
+    <div class="rate" id="rate-eur"><span class="skeleton"></span></div>
+    <span class="change neutral" id="change-eur">--</span>
+  </div>
+  <div class="card crypto" id="card-btc">
+    <div class="pair-label"><span class="flag">&#8383;</span><span class="pair-name">BTC / JPY</span></div>
+    <div class="rate" id="rate-btc"><span class="skeleton"></span></div>
+    <span class="change neutral" id="change-btc">--</span>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn" id="btn-refresh" onclick="fetchRates()">
+    <span class="spinner" id="spinner"></span>
+    Refresh
+  </button>
+  <button class="btn active" data-interval="30" onclick="setInterval_(30)">30s</button>
+  <button class="btn" data-interval="60" onclick="setInterval_(60)">60s</button>
+  <button class="btn" data-interval="120" onclick="setInterval_(120)">2m</button>
+</div>
+
+<div class="status-bar">
+  <span class="dot" id="dot"></span>
+  <span id="status-text">Connecting...</span>
+  <span>&middot;</span>
+  <span id="last-update">--</span>
+</div>
+<p class="error-msg" id="error-msg"></p>
+
+<script>
+(function(){
+  const API_PRIMARY   = 'https://open.er-api.com/v6/latest/JPY';
+  const API_FALLBACK  = 'https://api.frankfurter.dev/v1/latest?base=JPY';
+  const API_CRYPTO    = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=jpy';
+
+  const fxPairs = ['usd','eur'];
+  const allPairs = ['usd','eur','btc'];
+  const prev  = {};
+  let timer   = null;
+  let intervalSec = 30;
+
+  async function fetchFxPrimary(){
+    const r = await fetch(API_PRIMARY);
+    if(!r.ok) throw new Error('Primary API error');
+    const d = await r.json();
+    if(d.result !== 'success') throw new Error('Primary API failed');
+    return {
+      usd: 1 / d.rates.USD,
+      eur: 1 / d.rates.EUR,
+    };
+  }
+
+  async function fetchFxFallback(){
+    const r = await fetch(API_FALLBACK);
+    if(!r.ok) throw new Error('Fallback API error');
+    const d = await r.json();
+    return {
+      usd: 1 / d.rates.USD,
+      eur: 1 / d.rates.EUR,
+    };
+  }
+
+  async function fetchBtc(){
+    const r = await fetch(API_CRYPTO);
+    if(!r.ok) throw new Error('Crypto API error');
+    const d = await r.json();
+    return d.bitcoin.jpy;
+  }
+
+  function fmt(v, pair){
+    if(pair === 'btc') return v.toLocaleString('ja-JP',{maximumFractionDigits:0});
+    return v.toFixed(3);
+  }
+
+  function updateUI(rates){
+    allPairs.forEach(p=>{
+      if(rates[p] === undefined) return;
+      const rateEl   = document.getElementById('rate-'+p);
+      const changeEl = document.getElementById('change-'+p);
+      const val = rates[p];
+      rateEl.textContent = fmt(val, p);
+
+      if(prev[p] !== undefined){
+        const diff = val - prev[p];
+        const pct  = ((diff / prev[p]) * 100).toFixed(3);
+        if(diff > 0){
+          changeEl.className = 'change up';
+          changeEl.textContent = '\u25B2 +' + pct + '%';
+        } else if(diff < 0){
+          changeEl.className = 'change down';
+          changeEl.textContent = '\u25BC ' + pct + '%';
+        } else {
+          changeEl.className = 'change neutral';
+          changeEl.textContent = '- 0.000%';
+        }
+      }
+      prev[p] = val;
+    });
+  }
+
+  window.fetchRates = async function(){
+    const spinner = document.getElementById('spinner');
+    const btn     = document.getElementById('btn-refresh');
+    const dot     = document.getElementById('dot');
+    const status  = document.getElementById('status-text');
+    const errMsg  = document.getElementById('error-msg');
+    const lastUp  = document.getElementById('last-update');
+
+    spinner.classList.add('show');
+    btn.disabled = true;
+    errMsg.classList.remove('show');
+
+    try {
+      let fxRates;
+      try {
+        fxRates = await fetchFxPrimary();
+      } catch(_){
+        fxRates = await fetchFxFallback();
+      }
+
+      let btcRate;
+      try {
+        btcRate = await fetchBtc();
+      } catch(_){ /* BTC fetch failed, skip */ }
+
+      const rates = { ...fxRates };
+      if(btcRate) rates.btc = btcRate;
+      updateUI(rates);
+      dot.classList.remove('error');
+      status.textContent = 'Live';
+      lastUp.textContent = new Date().toLocaleTimeString('ja-JP');
+    } catch(e){
+      dot.classList.add('error');
+      status.textContent = 'Error';
+      errMsg.textContent = 'Failed to fetch rates. Retrying...';
+      errMsg.classList.add('show');
+    } finally {
+      spinner.classList.remove('show');
+      btn.disabled = false;
+    }
+  };
+
+  window.setInterval_ = function(sec){
+    intervalSec = sec;
+    document.querySelectorAll('[data-interval]').forEach(b=>{
+      b.classList.toggle('active', Number(b.dataset.interval) === sec);
+    });
+    if(timer) clearInterval(timer);
+    timer = setInterval(fetchRates, sec * 1000);
+  };
+
+  fetchRates();
+  timer = setInterval(fetchRates, intervalSec * 1000);
+})();
+</script>
+</body>
+</html>
