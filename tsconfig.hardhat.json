@@ -1,0 +1,19 @@
+{
+  // Hardhat / ts-node 用 TypeScript 設定
+  // Vite 用の tsconfig.json とは別に CommonJS モードで動作させる
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "outDir": "artifacts-ts"
+  },
+  "include": [
+    "hardhat.config.cts",
+    "scripts/**/*.cts",
+    "test/**/*.cts"
+  ]
+}
