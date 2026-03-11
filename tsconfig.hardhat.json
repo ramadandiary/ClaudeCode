@@ -1,6 +1,16 @@
 {
   // Hardhat / ts-node 用 TypeScript 設定
   // Vite 用の tsconfig.json とは別に CommonJS モードで動作させる
+  //
+  // "ts-node" セクション: TS_NODE_PROJECT=tsconfig.hardhat.json でも
+  //   ts-node のコンパイル設定を明示的に指定（二重安全）
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "CommonJS",
+      "moduleResolution": "node"
+    }
+  },
   "compilerOptions": {
     "target": "ES2020",
     "module": "CommonJS",
