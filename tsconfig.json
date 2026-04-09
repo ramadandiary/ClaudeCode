@@ -1,0 +1,39 @@
+{
+  // =========================================================
+  // ts-node オーバーライド（tsc / Vite には影響しない）
+  //
+  // TS5095 の根本原因:
+  //   ts-node（Hardhat 内部）が この tsconfig.json を読み込んだとき、
+  //   "moduleResolution": "bundler" を維持しつつ module を CommonJS に
+  //   変換しようとして TypeScript が TS5095 エラーを発生させる。
+  //
+  // 修正: ts-node 専用セクションで module/moduleResolution を上書きする。
+  //   このセクションは ts-node のみが参照し、tsc・Vite は無視する。
+  // =========================================================
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "CommonJS",
+      "moduleResolution": "node"
+    }
+  },
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
+}
